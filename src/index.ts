@@ -22,6 +22,9 @@ const timeEntries = await getTimes(harvestCredentials, {
 console.log(timeEntries.length)
 console.log(timeEntries.map(e => e.user.name))
 
+const personioEmployees = await personioAPI.getEmployees()
+console.log(personioEmployees)
+
 
 try {
     await personioAPI.authorize()

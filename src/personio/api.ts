@@ -1,4 +1,4 @@
-import { Attendance } from './attendance.ts'
+import { Attendance, Employee } from './index.ts'
 
 export class API {
     baseUrl = 'https://api.personio.de/v1'
@@ -35,7 +35,7 @@ export class API {
         // The token is not returned in the headers from /auth
         this.token = data.token
     }
-    async request(endpoint: string, method: string, body: {}) {
+    async request(endpoint: string, method: string, body: {} = {}) {
         const authAndSend = async () => {
             if (!this.token) await this.authorize()
             return await this.basicRequest(endpoint, method, body)
@@ -49,14 +49,17 @@ export class API {
             else throw e
         }
     }    
-    get(endpoint: string, body: {}) {
-        return this.request(endpoint, 'GET', body)
+    get(endpoint: string) {
+        return this.request(endpoint, 'GET')
     }
     post(endpoint: string, body: {}) {
         return this.request(endpoint, 'POST', body)
     }
     createAttendances(attendances: Attendance[]) {
         return this.post('company/attendances', { attendances })
+    }
+    async getEmployees() {
+        return await this.get('company/employees') as Employee[]
     }
 }
 
