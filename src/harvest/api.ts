@@ -56,6 +56,8 @@ export type GetTimesProps = {
     users?: string
 }
 
+export const getMe = async (bearerAuthProps: BearerAuthProps) => await get(expandEndpoint('users/me.json'), bearerAuthProps) as User
+
 export const getUsers = async (bearerAuthProps: BearerAuthProps): Promise<User[]> => {
     // Try /users first, if not authorized, then check me.json
     try {
@@ -63,7 +65,7 @@ export const getUsers = async (bearerAuthProps: BearerAuthProps): Promise<User[]
     } catch (e) {
         // Standard users do not have access to /users, only to /users/me.json
         if (e.message !== 'Not authorized!') throw e
-        const user = await get(expandEndpoint('users/me.json'), bearerAuthProps)
+        const user = await getMe(bearerAuthProps)
         return [ user ]
     }
 }
