@@ -1,6 +1,16 @@
 # harvest-personio-copy-times
 Copy employees' time entries from Harvest into Personio
 
+[github.com/phiture/harvest-personio-copy-times 👉](https://github.com/phiture/harvest-personio-copy-times)
+
+## Contents
+- [Requirements](#requirements)
+- [Example Usage](#example-usage)
+- [Arguments](#arguments)
+    - [From and To Dates](#from-and-to-dates)
+    - [People to Include and People to Exclude](#people-to-include-and-people-to-exclude)
+    - [Default Arguments](#default-arguments)
+- [Developers Abstract](#developers-abstract)
 
 ## Requirements
 - Deno 1.4.0 or above.
@@ -48,8 +58,26 @@ Examples:
 - `me` will copy times for whoever's Harvest personal access token is being used.
 - `all me` will copy times for eveyone except me.
 
-### Default arguments
+### Default Arguments
 The order of the arguments cannot be changed but one or more arguments may be left off the end.
 The default arguments are:
 ```shell
 ./index.sh _ _ '' ''
+```
+
+## Developers Abstract
+More information on:
+[Harvest API 👉](https://help.getharvest.com/api-v2/) |
+[Personio API 👉](https://developer.personio.de/)
+
+This app works by making a request to `api.harvestapp.com/v2/time_entries`,
+concatnating the users' first and last names, matching these names against
+a list of employee names fetched from `api.personio.de/v1/company/employees`
+and adding corresponding attendances with `api.personio.de/v1/company/attendances`.
+Functionality is divided into
+a [Personio module](./src/personio/),
+a [Harvest module](./src/harvest/),
+and helper functions for processing data correctly according to the passed arguments
+in [utils.ts](./src/utils.ts).
+[index.ts](./src/index.ts) is the entrypoint to the app,
+executes immediately when run, and contains all the high level functionality.
