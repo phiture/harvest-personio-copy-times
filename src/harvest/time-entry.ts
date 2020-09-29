@@ -19,7 +19,7 @@ export type TimeEntry = {
     updated_at: string
 }
 
-type User = {
+export type User = {
     // Note: Not identical to the User type in user.ts
     id: number
     name: string
