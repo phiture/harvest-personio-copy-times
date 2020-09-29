@@ -13,7 +13,7 @@ const sendRequest = async (url: string, method: string, { accountId, personalAcc
         }
     })
     const data = await response.json()
-    if (response.status >= 400) throw new Error(data.message)
+    if (response.status >= 400) throw new Error(JSON.stringify(data))
     return data
 }
 

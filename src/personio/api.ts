@@ -14,18 +14,19 @@ export class API {
         return `${this.baseUrl}/${endpoint}`
     }
     async basicRequest(endpoint: string, method: string, body: {}) {
+        const jsonBody = JSON.stringify(body)
         const response = await fetch(this.expandEndpoint(endpoint), {
             method,
             headers: {
                 'Content-type': 'application/json; charset=UTF-8',
                 Authorization: `Bearer ${this.token}`,
             },
-            body: JSON.stringify(body),
+            body: jsonBody,
         })
         this.token = response.headers.get('authorization')?.split(' ')[1]
         const data: PersonioResponse = await response.json()
         if (data.success) return data.data
-        throw new Error(data.error?.message)
+        throw new Error(`Response: ${JSON.stringify(data)} - Request body: ${jsonBody}`)
     }
     async authorize() {
         const data = await this.basicRequest('auth', 'POST', {
@@ -56,6 +57,7 @@ export class API {
         return this.request(endpoint, 'POST', body)
     }
     createAttendances(attendances: Attendance[]) {
+        if (!attendances.length) return Promise.resolve()
         return this.post('company/attendances', { attendances })
     }
     async getEmployees() {
