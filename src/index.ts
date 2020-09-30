@@ -1,4 +1,4 @@
-import { config } from 'https://deno.land/x/dotenv/mod.ts'
+import { config } from 'https://deno.land/x/dotenv@v0.5.0/mod.ts'
 import { generateDateChecker, generatePersonChecker, generatePersonioIdFromHarvestUserFinder } from './utils.ts'
 import { BearerAuthProps as HarvestCredentials, getMe, getTimes } from './harvest/index.ts'
 import { API as PersonioAPI, Attendance } from './personio/index.ts'
