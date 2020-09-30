@@ -39,7 +39,7 @@ export const generatePersonChecker = (include: string, exclude: string) => {
  * @return A function which takes a harvest.TimeEntry.User object as input and returns the Personio ID for the matching employee or undefined if not found.
  */
 export const generatePersonioIdFromHarvestUserFinder = (personioPeople: Employee[]) => {
-    const personioIds: { [key: string]: number } = {}
+    const personioIds: { [key: string]: number | undefined } = {}
     for (const person of personioPeople) personioIds[`${person.attributes.first_name.value}${person.attributes.last_name.value}`] = person.attributes.id.value
     return (person: TimeEntryUser) => {
         const name = person.name.replaceAll(' ', '')

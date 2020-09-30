@@ -36,7 +36,10 @@ const attendances: Attendance[] = []
 for (const timeEntry of timeEntries) {
     if (!checkDate(timeEntry.spent_date) || !checkPerson(timeEntry.user) || timeEntry.is_running) continue
     const personioId = findPersonioIdFromHarvestUser(timeEntry.user)
-    if (!personioId) console.log(`Could not find ${timeEntry.user.name} in Personio.`)
+    if (!personioId) {
+        console.log(`Could not find ${timeEntry.user.name} in Personio.`)
+        continue
+    }
     const textualData = [
         timeEntry.project.name,
         timeEntry.task.name,
