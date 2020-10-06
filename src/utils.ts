@@ -17,6 +17,14 @@ export const generateDateChecker = (from: string | null, to: string | null) => (
 
 /**
  * 
+ * @param name harvest.TimeEntryUser.name or personio.Employee concatnated first and last names.
+ * @returns Formatted name as expected from CLI input and used in ID matching.
+ */
+const formatName = (name: string) => name.replaceAll(' ', '')
+
+
+/**
+ * 
  * @param include Include People argument. '' to include none. '*' to include all.
  * @param exclude Exclude People argument. '' to exclude none. '*' to exclude all.
  * @return A function which takes a harvest.TimeEntry.User object as input and returns true if this person should be included.
@@ -25,7 +33,7 @@ export const generatePersonChecker = (include: string, exclude: string) => {
     const includeList = include.split(',')
     const excludeList = exclude.split(',')
     return (person: TimeEntryUser) => {
-        const name = person.name.replaceAll(' ', '')
+        const name = formatName(person.name)
         if (exclude === 'all' || excludeList.includes(name)) return false
         if (include !== 'all' && !includeList.includes(name)) return false
         return true
@@ -40,9 +48,13 @@ export const generatePersonChecker = (include: string, exclude: string) => {
  */
 export const generatePersonioIdFromHarvestUserFinder = (personioPeople: Employee[]) => {
     const personioIds: { [key: string]: number | undefined } = {}
-    for (const person of personioPeople) personioIds[`${person.attributes.first_name.value}${person.attributes.last_name.value}`] = person.attributes.id.value
+    for (const { attributes: {
+        first_name: { value: firstName },
+        last_name: { value: lastName },
+        id: { value: id },
+    } } of personioPeople) personioIds[formatName(firstName + lastName)] = id
     return (person: TimeEntryUser) => {
-        const name = person.name.replaceAll(' ', '')
+        const name = formatName(person.name)
         return personioIds[name]
     }
 }
