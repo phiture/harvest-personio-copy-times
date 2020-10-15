@@ -3,7 +3,9 @@ import { findOverlappingTimeEntries, generateDateChecker, generatePersonChecker,
 import { BearerAuthProps as HarvestCredentials, getMe, getTimes } from './harvest/index.ts'
 import { API as PersonioAPI, Attendance } from './personio/index.ts'
 
-config({ export: true, safe: true })
+let [ fromDate = null, toDate = null, includePeople = '', excludePeople = '', dotEnvPath = './.env' ] = Deno.args
+
+config({ export: true, safe: true, path: dotEnvPath })
 const personioAPI = new PersonioAPI({
     clientId: Deno.env.get('PERSONIO_CLIENT_ID') || '',
     clientSecret: Deno.env.get('PERSONIO_CLIENT_SECRET') || '',
@@ -13,7 +15,7 @@ const harvestCredentials: HarvestCredentials = {
     accountId: Deno.env.get('HARVEST_ACCOUNT_ID') || '',
     personalAccessToken: Deno.env.get('HARVEST_PERSONAL_ACCESS_TOKEN') || '',
 }
-let [ fromDate = null, toDate = null, includePeople, excludePeople ] = Deno.args
+
 if (fromDate === '_') fromDate = null
 if (toDate === '_') toDate = null
 if (includePeople === 'me' || excludePeople === 'me') {

@@ -9,8 +9,11 @@ Copy employees' time entries from Harvest into Personio
 - [Arguments](#arguments)
     - [From and To Dates](#from-and-to-dates)
     - [People to Include and People to Exclude](#people-to-include-and-people-to-exclude)
+    - [.env Path](#env-path)
     - [Default Arguments](#default-arguments)
-- [Developers Abstract](#developers-abstract)
+- [For Developers](#developers-abstract)
+    - [General Architecture](#general-architecture)
+    - [Dockerized Cron Job](#dockerized-cron-job)
 
 ## Requirements
 - Deno 1.4.0 or above.
@@ -21,16 +24,16 @@ Copy employees' time entries from Harvest into Personio
 ./index.sh 2020-01-01 _ me  # Copy all of your times on and after 2020-01-01
 ```
 
-You can also run the underlyting deno app directly like:
+You can also run the underlying deno app directly like:
 ```shell
 deno run --allow-env --allow-net=api.personio.de,api.harvestapp.com --allow-read=.env,.env.example,.env.defaults src/index.ts ...arguments
 ```
 however due to deno's strict security this line is cumbersome. `index.sh` is provided for convenience.
 
 ## Arguments
-`index.ts` and `index.sh` take 4 command line arguments, in the following order:
+`index.ts` and `index.sh` take 5 command line arguments, in the following order:
 ```shell
-./index.sh fromDate toDate includePeople excludePeople
+./index.sh fromDate toDate includePeople excludePeople dotEnvPath
 ```
 
 ### From and To Dates
@@ -58,14 +61,19 @@ Examples:
 - `me` will copy times for whoever's Harvest personal access token is being used.
 - `all me` will copy times for eveyone except me.
 
+### .env Path
+Optional path to `.env` file. Defaults to `./.env`.
+
 ### Default Arguments
 The order of the arguments cannot be changed but one or more arguments may be left off the end.
 The default arguments are:
 ```shell
-./index.sh _ _ '' ''
+./index.sh _ _ '' '' './.env'
 ```
 
-## Developers Abstract
+## For Developers
+
+### General Architecture
 More information on:
 [Harvest API 👉](https://help.getharvest.com/api-v2/) |
 [Personio API 👉](https://developer.personio.de/)
@@ -81,3 +89,10 @@ and helper functions for processing data correctly according to the passed argum
 in [utils.ts](./src/utils.ts).
 [index.ts](./src/index.ts) is the entrypoint to the app,
 executes immediately when run, and contains all the high level functionality.
+
+### Dockerized Cron Job
+```shell
+echo HOST_ROOT_DIR=$(pwd) >> .env
+docker-compose up -d
+```
+Look into [cronfile](./cronfile) to change the cron job frequency.

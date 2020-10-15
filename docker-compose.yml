@@ -1,0 +1,10 @@
+version: "3.7"
+
+services:
+    harvest-personio-copy-times:
+        build: .
+        image: phiture/harvest-personio-copy-times
+        restart: always
+        volumes:
+            - ${HOST_ROOT_DIR}/cron_log:/var/cron_log
+        command: ["cron", "-f"]
