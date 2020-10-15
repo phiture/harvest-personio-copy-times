@@ -1,5 +1,5 @@
 import { config } from 'https://deno.land/x/dotenv@v0.5.0/mod.ts'
-import { generateDateChecker, generatePersonChecker, generatePersonioIdFromHarvestUserFinder } from './utils.ts'
+import { findOverlappingTimeEntries, generateDateChecker, generatePersonChecker, generatePersonioIdFromHarvestUserFinder } from './utils.ts'
 import { BearerAuthProps as HarvestCredentials, getMe, getTimes } from './harvest/index.ts'
 import { API as PersonioAPI, Attendance } from './personio/index.ts'
 
@@ -32,6 +32,18 @@ const timeEntries = await getTimes(harvestCredentials, {
     from: fromDate || undefined,
     to: toDate || undefined,
 })
+const overlaps = findOverlappingTimeEntries(timeEntries)
+if (overlaps.length) {
+    console.log('Overlapping time entries found. Aborting.')
+    console.log(overlaps.map(attendances => attendances.map(a => ({
+        id: a.id,
+        spent_date: a.spent_date,
+        user: a.user,
+        started_time: a.started_time,
+        ended_time: a.ended_time,
+    }))))
+    Deno.exit()
+}
 const attendances: Attendance[] = []
 for (const timeEntry of timeEntries) {
     if (!checkDate(timeEntry.spent_date) || !checkPerson(timeEntry.user) || timeEntry.is_running) continue

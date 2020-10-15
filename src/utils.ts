@@ -1,4 +1,4 @@
-import { TimeEntryUser } from './harvest/index.ts'
+import { TimeEntry, TimeEntryUser } from './harvest/index.ts'
 import { Employee } from './personio/index.ts'
 
 /**
@@ -57,4 +57,23 @@ export const generatePersonioIdFromHarvestUserFinder = (personioPeople: Employee
         const name = formatName(person.name)
         return personioIds[name]
     }
+}
+
+const numberTime = (time: string) => Number(time.replace(':', ''))
+
+export const findOverlappingTimeEntries = (timeEntries: TimeEntry[]) => {
+    const users = Array.from(new Set(timeEntries.map(e => e.user.id))).sort()
+    const overlaps: [TimeEntry, TimeEntry][] = []
+    for (const user of users) {
+        const userTimeEntries = timeEntries.filter(e => e.user.id === user).sort((a, b) => numberTime(a.started_time) - numberTime(b.started_time))
+        for (const i in userTimeEntries) {
+            const current = userTimeEntries[i]
+            const next = userTimeEntries[Number(i) + 1]
+            if (!next) break
+            if (numberTime(current.ended_time) > numberTime(next.started_time)) {
+                overlaps.push([current, next])
+            }
+        }
+    }
+    return overlaps
 }
