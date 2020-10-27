@@ -1,5 +1,5 @@
 import { config } from 'https://deno.land/x/dotenv@v0.5.0/mod.ts'
-import { findOverlappingTimeEntries, generateDateChecker, generatePersonChecker, generatePersonioIdFromHarvestUserFinder } from './utils.ts'
+import { addDailyTimeEntries, formatName, generateDateChecker, generatePersonChecker, generatePersonioIdFromHarvestUserFinder, groupTimeEntriesByUser } from './utils.ts'
 import { BearerAuthProps as HarvestCredentials, getMe, getTimes } from './harvest/index.ts'
 import { API as PersonioAPI, Attendance } from './personio/index.ts'
 
@@ -35,41 +35,32 @@ const timeEntries = await getTimes(harvestCredentials, {
     from: fromDate || undefined,
     to: toDate || undefined,
 })
-const overlaps = findOverlappingTimeEntries(timeEntries)
-if (overlaps.length) {
-    console.log('Overlapping time entries found. Aborting.')
-    console.log(overlaps.map(attendances => attendances.map(a => ({
-        id: a.id,
-        spent_date: a.spent_date,
-        user: a.user,
-        started_time: a.started_time,
-        ended_time: a.ended_time,
-    }))))
-    Deno.exit()
-}
+const filteredTimeEntries = timeEntries.filter(entry => {
+    if (!checkDate(entry.spent_date) || !checkPerson(entry.user)) return false
+    if (entry.is_running) {
+        console.log('Skipping time entry which is still running', entry)
+        return false
+    }
+    return true
+})
+
 const attendances: Attendance[] = []
-for (const timeEntry of timeEntries) {
-    if (!checkDate(timeEntry.spent_date) || !checkPerson(timeEntry.user) || timeEntry.is_running) continue
-    const personioId = findPersonioIdFromHarvestUser(timeEntry.user)
-    if (!personioId) {
-        console.log(`Could not find ${timeEntry.user.name} in Personio.`)
+for (const userTimeEntries of groupTimeEntriesByUser(filteredTimeEntries)) {
+    const harvestUser = userTimeEntries[0].user
+    const personioEmployeeId = findPersonioIdFromHarvestUser(harvestUser)
+    if (!personioEmployeeId) {
+        console.log(`Could not find user ${harvestUser.name} in Personio. Skipping.`)
         continue
     }
-    const textualData = [
-        timeEntry.project.name,
-        timeEntry.task.name,
-    ]
-    if (timeEntry.notes) textualData.push(timeEntry.notes)
-    if (timeEntry.external_reference) textualData.push(timeEntry.external_reference.permalink)
-    attendances.push({
-        employee: personioId,
-        date: timeEntry.spent_date,
-        start_time: timeEntry.started_time,
-        end_time: timeEntry.ended_time,
-        break: 0,
-        comment: textualData.join(' > '),
-    })
+    const userAttendences = addDailyTimeEntries(userTimeEntries)
+    .map(attendance => ({
+        ...attendance,
+        employee: personioEmployeeId,
+        comment: 'Created from Harvest',
+    }))
+    attendances.push(...userAttendences)
 }
+
 personioAPI.createAttendances(attendances)
 .then(() => {
     console.log(attendances)

@@ -1,5 +1,5 @@
 import { TimeEntry, TimeEntryUser } from './harvest/index.ts'
-import { Employee } from './personio/index.ts'
+import { Attendance, Employee } from './personio/index.ts'
 
 /**
  * 
@@ -59,21 +59,63 @@ export const generatePersonioIdFromHarvestUserFinder = (personioPeople: Employee
     }
 }
 
-const numberTime = (time: string) => Number(time.replace(':', ''))
+/**
+ * 
+ * @param timeEntries All time entries
+ * @returns An array arrays. Time entries grouped by user ID.
+ */
+export const groupTimeEntriesByUser = (timeEntries: TimeEntry[]) => {
+    const userIds = Array.from(new Set(timeEntries.map(e => e.user.id)))
+    return userIds.map(uid => timeEntries.filter(e => e.user.id === uid))
+}
 
-export const findOverlappingTimeEntries = (timeEntries: TimeEntry[]) => {
-    const users = Array.from(new Set(timeEntries.map(e => e.user.id))).sort()
-    const overlaps: [TimeEntry, TimeEntry][] = []
-    for (const user of users) {
-        const userTimeEntries = timeEntries.filter(e => e.user.id === user).sort((a, b) => numberTime(a.started_time) - numberTime(b.started_time))
-        for (const i in userTimeEntries) {
-            const current = userTimeEntries[i]
-            const next = userTimeEntries[Number(i) + 1]
-            if (!next) break
-            if (numberTime(current.ended_time) > numberTime(next.started_time)) {
-                overlaps.push([current, next])
-            }
+/**
+ * 
+ * @param time Time without date in format 13:59
+ * @returns This time represented as a number of minutes since 00:00
+ */
+const convertTimeToMinutesSinceMidnight = (time: string) => {
+    const [ hour, minute ] = time.split(':')
+    return Number(hour) * 60 + Number(minute)
+}
+
+/**
+ * 
+ * @param minutes A time represented as a number of minutes since 00:00
+ * @returns This time in format 13:59
+ */
+const convertMinutesSinceMidnightToTime = (minutes: number) => {
+    return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`
+}
+
+/**
+ * 
+ * @param timeEntries A list of time entries for one user
+ * @returns One attendance, with start and end times of the first and last time entry, and break in minutes.
+ */
+export const addDailyTimeEntries = (timeEntries: TimeEntry[]) => {
+    const uniqueDates = Array.from(new Set(timeEntries.map(e => e.spent_date)))
+    return uniqueDates.map(date => {
+        const timeEntriesForDate = timeEntries
+        .filter(e => e.spent_date === date)
+        .sort((a, b) => convertTimeToMinutesSinceMidnight(a.started_time) - convertTimeToMinutesSinceMidnight(b.started_time))
+        const startTime = convertTimeToMinutesSinceMidnight(timeEntriesForDate[0].started_time)
+        /**
+         * Add up breaks, so as to not count duplicate or partially duplicate entries.
+         */
+        let totalBreakMinutes = 0
+        let currentEndTime = startTime
+        for (const timeEntry of timeEntriesForDate) {
+            const start = convertTimeToMinutesSinceMidnight(timeEntry.started_time)
+            const end = convertTimeToMinutesSinceMidnight(timeEntry.ended_time)
+            if (start > currentEndTime) totalBreakMinutes += start - currentEndTime
+            if (end > currentEndTime) currentEndTime = end
         }
-    }
-    return overlaps
+        return {
+            date,
+            start_time: convertMinutesSinceMidnightToTime(startTime),
+            end_time: convertMinutesSinceMidnightToTime(currentEndTime),
+            break: totalBreakMinutes
+        } as Attendance
+    })
 }
