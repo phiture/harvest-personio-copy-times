@@ -1,7 +1,10 @@
 import { config } from 'https://deno.land/x/dotenv@v0.5.0/mod.ts'
-import { addDailyTimeEntries, formatName, generateDateChecker, generatePersonChecker, generatePersonioIdFromHarvestUserFinder, groupTimeEntriesByUser } from './utils.ts'
+import { addDailyTimeEntries, formatName, generateDateChecker, generatePersonChecker, generatePersonioIdFromHarvestUserFinder, groupTimeEntriesByUser, jobLog } from './utils.ts'
 import { BearerAuthProps as HarvestCredentials, getMe, getTimes } from './harvest/index.ts'
 import { API as PersonioAPI, Attendance } from './personio/index.ts'
+
+const JOB_LOG = jobLog()
+console.log(`Starting job: ${JOB_LOG}`)
 
 let [ fromDate = null, toDate = null, includePeople = '', excludePeople = '', dotEnvPath = './.env', dotEnvExamplePath = '' ] = Deno.args
 
@@ -56,7 +59,7 @@ for (const userTimeEntries of groupTimeEntriesByUser(filteredTimeEntries)) {
     .map(attendance => ({
         ...attendance,
         employee: personioEmployeeId,
-        comment: 'Created from Harvest',
+        comment: `Created from Harvest (${JOB_LOG})`,
     }))
     attendances.push(...userAttendences)
 }
@@ -66,3 +69,4 @@ personioAPI.createAttendances(attendances)
     console.log(attendances)
     console.log(`Added ${attendances.length} attendance${attendances.length > 1 ? 's' : ''}!`)
 })
+.finally(() => console.log(`Completed job: ${JOB_LOG}`))
