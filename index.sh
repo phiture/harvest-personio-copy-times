@@ -1,1 +1,1 @@
-deno run --allow-env --allow-net=api.personio.de,api.harvestapp.com --allow-read=.env,.env.example,.env.defaults src/index.ts "$1" "$2" "$3" "$4" "$5"
+deno run --allow-env --allow-net=api.personio.de,api.harvestapp.com --allow-read=.env,.env.example,.env.defaults src/index.ts "$@"

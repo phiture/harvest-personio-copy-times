@@ -3,9 +3,9 @@ import { findOverlappingTimeEntries, generateDateChecker, generatePersonChecker,
 import { BearerAuthProps as HarvestCredentials, getMe, getTimes } from './harvest/index.ts'
 import { API as PersonioAPI, Attendance } from './personio/index.ts'
 
-let [ fromDate = null, toDate = null, includePeople = '', excludePeople = '', dotEnvPath = './.env' ] = Deno.args
+let [ fromDate = null, toDate = null, includePeople = '', excludePeople = '', dotEnvPath = './.env', dotEnvExamplePath = '' ] = Deno.args
 
-config({ export: true, safe: true, path: dotEnvPath })
+config({ export: true, safe: true, path: dotEnvPath, example: dotEnvExamplePath || `${dotEnvPath}.example`, defaults: '' })
 const personioAPI = new PersonioAPI({
     clientId: Deno.env.get('PERSONIO_CLIENT_ID') || '',
     clientSecret: Deno.env.get('PERSONIO_CLIENT_SECRET') || '',
@@ -20,8 +20,9 @@ if (fromDate === '_') fromDate = null
 if (toDate === '_') toDate = null
 if (includePeople === 'me' || excludePeople === 'me') {
     const me = await getMe(harvestCredentials)
-    if (includePeople === 'me') includePeople = `${me.first_name}${me.last_name}`
-    if (excludePeople === 'me') excludePeople = `${me.first_name}${me.last_name}`
+    const meName = formatName(`${me.first_name} ${me.last_name}`)
+    if (includePeople === 'me') includePeople = meName
+    if (excludePeople === 'me') excludePeople = meName
 }
 
 const checkDate = generateDateChecker(fromDate, toDate)
@@ -72,5 +73,5 @@ for (const timeEntry of timeEntries) {
 personioAPI.createAttendances(attendances)
 .then(() => {
     console.log(attendances)
-    console.log(`Added ${attendances.length} attendances!`)
+    console.log(`Added ${attendances.length} attendance${attendances.length > 1 ? 's' : ''}!`)
 })

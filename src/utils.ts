@@ -20,13 +20,13 @@ export const generateDateChecker = (from: string | null, to: string | null) => (
  * @param name harvest.TimeEntryUser.name or personio.Employee concatnated first and last names.
  * @returns Formatted name as expected from CLI input and used in ID matching.
  */
-const formatName = (name: string) => name.replaceAll(' ', '')
+export const formatName = (name: string) => name.replaceAll(' ', '')
 
 
 /**
  * 
- * @param include Include People argument. '' to include none. '*' to include all.
- * @param exclude Exclude People argument. '' to exclude none. '*' to exclude all.
+ * @param include Include People argument. '' to include none. 'all' to include all.
+ * @param exclude Exclude People argument. '' to exclude none. 'all' to exclude all.
  * @return A function which takes a harvest.TimeEntry.User object as input and returns true if this person should be included.
  */
 export const generatePersonChecker = (include: string, exclude: string) => {
