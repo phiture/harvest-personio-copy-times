@@ -1,2 +1,5 @@
-# time    deno                 run permissions                                                                                                 app                   fromDate                         toDate                           users   .env           remove color                 logfile
-0 8 * * * /root/.deno/bin/deno run --allow-env --allow-net=api.personio.de,api.harvestapp.com --allow-read=/workdir/.env,/workdir/.env.example /workdir/src/index.ts `date -d yesterday +\%Y-\%m-\%d` `date -d yesterday +\%Y-\%m-\%d` all '' /workdir/.env | sed 's/\x1b\[[0-9;]*m//g' >> /var/cron_log/cronjob.log 2>&1
+# Tell Deno to not output color as this looks weird in the log files.
+NO_COLOR= \
+
+# time    deno                 run permissions                                                                                                 app                   fromDate                         toDate                           users   .env           logfile
+0 8 * * * /root/.deno/bin/deno run --allow-env --allow-net=api.personio.de,api.harvestapp.com --allow-read=/workdir/.env,/workdir/.env.example /workdir/src/index.ts `date -d yesterday +\%Y-\%m-\%d` `date -d yesterday +\%Y-\%m-\%d` all '' /workdir/.env >> /var/cron_log/cronjob.log 2>&1
