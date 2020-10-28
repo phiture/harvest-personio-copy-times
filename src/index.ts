@@ -65,8 +65,9 @@ for (const userTimeEntries of groupTimeEntriesByUser(filteredTimeEntries)) {
 }
 
 personioAPI.createAttendances(attendances)
-.then(() => {
-    console.log(attendances)
-    console.log(`Added ${attendances.length} attendance${attendances.length > 1 ? 's' : ''}!`)
+.then(response => {
+    console.log(response)  // So we have a record of the IDs
+    console.log(attendances)  // Easily readable version
+    console.log(`Added ${attendances.length} attendance${attendances.length !== 1 ? 's' : ''}!`)
 })
 .finally(() => console.log(`Completed job: ${JOB_LOG}`))
