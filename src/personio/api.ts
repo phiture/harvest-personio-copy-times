@@ -26,7 +26,7 @@ export class API {
         this.token = response.headers.get('authorization')?.split(' ')[1]
         const data: PersonioResponse = await response.json()
         if (data.success) return data.data
-        throw new Error(`Response: ${JSON.stringify(data)} - Request body: ${jsonBody}`)
+        throw new UnsuccessfulRequest(data)
     }
     async authorize() {
         const data = await this.basicRequest('auth', 'POST', {
@@ -70,8 +70,19 @@ export type ConstructorProps = {
     clientSecret: string
 }
 
-type PersonioResponse = {
+export type PersonioResponse = {
     success: boolean
     data: any
     error: { code: number, message: string } | undefined
+}
+
+export class UnsuccessfulRequest extends Error {
+    response: PersonioResponse
+
+    constructor(response: PersonioResponse) {
+        const message = `Personio request was not successful. Response: ${JSON.stringify(response)}`
+        super(message)
+        this.name = 'UnsuccessfulRequest'
+        this.response = response
+    }
 }

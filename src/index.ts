@@ -1,10 +1,10 @@
 import { config } from 'https://deno.land/x/dotenv@v0.5.0/mod.ts'
-import { addDailyTimeEntries, formatName, generateDateChecker, generatePersonChecker, generatePersonioIdFromHarvestUserFinder, groupTimeEntriesByUser, jobLog } from './utils.ts'
+import { addDailyTimeEntries, formatName, generateDateChecker, generatePersonChecker, generatePersonioIdFromHarvestUserFinder, groupTimeEntriesByUser } from './utils.ts'
 import { BearerAuthProps as HarvestCredentials, getMe, getTimes } from './harvest/index.ts'
-import { API as PersonioAPI, Attendance } from './personio/index.ts'
+import { API as PersonioAPI, Attendance, UnsuccessfulRequest } from './personio/index.ts'
+import { jobLog, AttendanceCreationLog, AttendanceCreationErrorReason, generateJobId } from './log.ts'
 
-const JOB_LOG = jobLog()
-console.log(`Starting job: ${JOB_LOG}`)
+const JOB_ID = generateJobId()
 
 let [ fromDate = null, toDate = null, includePeople = '', excludePeople = '', dotEnvPath = './.env', dotEnvExamplePath = '' ] = Deno.args
 
@@ -41,33 +41,69 @@ const timeEntries = await getTimes(harvestCredentials, {
 const filteredTimeEntries = timeEntries.filter(entry => {
     if (!checkDate(entry.spent_date) || !checkPerson(entry.user)) return false
     if (entry.is_running) {
-        console.log('Skipping time entry which is still running', entry)
+        const log: AttendanceCreationLog = {
+            timestamp: new Date(),
+            success: false,
+            errorReason: AttendanceCreationErrorReason.entryStillRunning,
+            harvestUserName: entry.user.name,
+            jobId: JOB_ID,
+            harvestTimeEntry: entry,
+        }
+        console.log(log)
         return false
     }
     return true
 })
 
-const attendances: Attendance[] = []
+/**
+ * The original idea was to push all attendances to Personio at once with `personioAPI.createAttendances(attendances)`.
+ * However, in the case of an unsuccessful request (due to e.g. overlapping attendance periods)
+ * Personio creates some items in the batch request but not all and does not return the IDs of the created items.
+ * Therefore I am now creating the attendances individually to be able to track which were successful and which were not.
+ * Since time is not an issue here and I'm not sure how simultaneous requests would work with Personio's authentication system
+ * and my implementation of it I am doing these reqeusts synchronously, rather than preprocessing and then using `Promise.all`.
+ */
 for (const userTimeEntries of groupTimeEntriesByUser(filteredTimeEntries)) {
     const harvestUser = userTimeEntries[0].user
     const personioEmployeeId = findPersonioIdFromHarvestUser(harvestUser)
+    const partialLog = {
+        harvestUserName: harvestUser.name,
+        jobId: JOB_ID,
+        attendance: undefined as Attendance | undefined,
+    }
     if (!personioEmployeeId) {
-        console.log(`Could not find user ${harvestUser.name} in Personio. Skipping.`)
+        const log: AttendanceCreationLog = {
+            timestamp: new Date(),
+            success: false,
+            errorReason: AttendanceCreationErrorReason.userNotFound,
+            ...partialLog,
+        }
+        console.log(log)
         continue
     }
-    const userAttendences = addDailyTimeEntries(userTimeEntries)
-    .map(attendance => ({
-        ...attendance,
-        employee: personioEmployeeId,
-        comment: `Created from Harvest (${JOB_LOG})`,
-    }))
-    attendances.push(...userAttendences)
+    for (const attendance of addDailyTimeEntries(userTimeEntries)) {
+        attendance.employee = personioEmployeeId
+        attendance.comment = `Created from Harvest (${jobLog(JOB_ID)})`
+        partialLog.attendance = attendance
+        let log: AttendanceCreationLog
+        try {
+            const response = await personioAPI.createAttendances([attendance])
+            log = {
+                timestamp: new Date(),
+                success: true,
+                personioResponse: response,
+                ...partialLog,
+            }
+        } catch (e) {
+            if (e instanceof UnsuccessfulRequest) log = {
+                timestamp: new Date(),
+                success: false,
+                errorReason: AttendanceCreationErrorReason.personioFailure,
+                personioResponse: e.response,
+                ...partialLog,
+            }
+            else throw e
+        }
+        console.log(log)
+    }
 }
-
-personioAPI.createAttendances(attendances)
-.then(response => {
-    console.log(response)  // So we have a record of the IDs
-    console.log(attendances)  // Easily readable version
-    console.log(`Added ${attendances.length} attendance${attendances.length !== 1 ? 's' : ''}!`)
-})
-.finally(() => console.log(`Completed job: ${JOB_LOG}`))
