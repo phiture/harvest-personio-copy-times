@@ -85,7 +85,7 @@ const convertTimeToMinutesSinceMidnight = (time: string) => {
  * @returns This time in format 13:59
  */
 const convertMinutesSinceMidnightToTime = (minutes: number) => {
-    return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`
+    return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
 }
 
 /**
