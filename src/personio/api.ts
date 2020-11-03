@@ -73,8 +73,18 @@ export type ConstructorProps = {
 export type PersonioResponse = {
     success: boolean
     data: any
-    error: { code: number, message: string } | undefined
+    error: PersonioResponseError | undefined
 }
+
+export type PersonioResponseError = {
+    code: number
+    message: string
+    errors?: PersonioResponseErrorErrors
+    detailed_message?: PersonioResponseErrorDetailedMessage
+}
+
+export type PersonioResponseErrorErrors = any
+export type PersonioResponseErrorDetailedMessage = any
 
 export class UnsuccessfulRequest extends Error {
     response: PersonioResponse

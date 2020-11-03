@@ -1,5 +1,5 @@
 import { TimeEntry } from './harvest/index.ts'
-import { PersonioResponse, Attendance } from './personio/index.ts'
+import { PersonioResponse, Attendance, PersonioResponseErrorErrors, PersonioResponseErrorDetailedMessage } from './personio/index.ts'
 
 /**
  * Generates a random ID
@@ -31,6 +31,8 @@ export type AttendanceCreationLog = {
     personioResponse?: PersonioResponse
     harvestUserName: string
     harvestTimeEntry?: TimeEntry
+    personioResponseErrorErrors?: PersonioResponseErrorErrors
+    personioResponseErrorDetailedMessage?: PersonioResponseErrorDetailedMessage
 }
 
 export enum AttendanceCreationErrorReason {

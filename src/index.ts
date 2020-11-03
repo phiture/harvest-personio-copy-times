@@ -100,6 +100,8 @@ for (const userTimeEntries of groupTimeEntriesByUser(filteredTimeEntries)) {
                 success: false,
                 errorReason: AttendanceCreationErrorReason.personioFailure,
                 personioResponse: e.response,
+                personioResponseErrorErrors: e.response.error?.errors,
+                personioResponseErrorDetailedMessage: e.response.error?.detailed_message,
                 ...partialLog,
             }
             else throw e
