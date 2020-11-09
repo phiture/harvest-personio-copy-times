@@ -17,7 +17,7 @@ export const generateJobId = (length = 8, charset='ABCDEFGHIJKLMNOPQRSTUVWXYZabc
  */
 export const jobLog = (jobId?: string) => {
     const today = new Date()
-    const date = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
+    const date = today.toISOString().split('T')[0]
     const id = jobId || generateJobId()
     return `Date: ${date}. Job ID: ${id}`
 }
