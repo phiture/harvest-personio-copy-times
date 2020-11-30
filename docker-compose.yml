@@ -6,5 +6,5 @@ services:
         image: phiture/harvest-personio-copy-times
         restart: always
         volumes:
-            - ${HOST_ROOT_DIR}/cron_log:/var/cron_log
+            - ${HOST_LOG_DIR}:/var/cron_log
         command: ["cron", "-f"]

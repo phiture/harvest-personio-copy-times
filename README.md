@@ -92,7 +92,7 @@ executes immediately when run, and contains all the high level functionality.
 
 ### Dockerized Cron Job
 ```shell
-echo HOST_ROOT_DIR=$(pwd) >> .env
+echo HOST_LOG_DIR=$(pwd)/cron_log >> .env
 docker-compose up -d
 ```
 Look into [cronfile](./cronfile) to change the cron job frequency.
