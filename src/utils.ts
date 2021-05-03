@@ -75,7 +75,7 @@ export const groupTimeEntriesByUser = (timeEntries: TimeEntry[]) => {
  * @returns This time represented as a number of minutes since 00:00
  */
 const convertTimeToMinutesSinceMidnight = (time: string) => {
-    const [ hour, minute ] = time.split(':')
+    const [hour, minute] = time.split(':')
     return Number(hour) * 60 + Number(minute)
 }
 
@@ -97,8 +97,8 @@ export const addDailyTimeEntries = (timeEntries: TimeEntry[]) => {
     const uniqueDates = Array.from(new Set(timeEntries.map(e => e.spent_date)))
     return uniqueDates.map(date => {
         const timeEntriesForDate = timeEntries
-        .filter(e => e.spent_date === date)
-        .sort((a, b) => convertTimeToMinutesSinceMidnight(a.started_time) - convertTimeToMinutesSinceMidnight(b.started_time))
+            .filter(e => e.spent_date === date)
+            .sort((a, b) => convertTimeToMinutesSinceMidnight(a.started_time) - convertTimeToMinutesSinceMidnight(b.started_time))
         const startTime = convertTimeToMinutesSinceMidnight(timeEntriesForDate[0].started_time)
         /**
          * Add up breaks, so as to not count duplicate or partially duplicate entries.
@@ -106,6 +106,10 @@ export const addDailyTimeEntries = (timeEntries: TimeEntry[]) => {
         let totalBreakMinutes = 0
         let currentEndTime = startTime
         for (const timeEntry of timeEntriesForDate) {
+            if (timeEntry.ended_time == null){
+                console.log(timeEntry)
+                continue
+            }
             const start = convertTimeToMinutesSinceMidnight(timeEntry.started_time)
             const end = convertTimeToMinutesSinceMidnight(timeEntry.ended_time)
             if (start > currentEndTime) totalBreakMinutes += start - currentEndTime

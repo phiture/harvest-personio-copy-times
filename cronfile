@@ -1,5 +1,15 @@
+STUDENTS=LenaConle,JosephDannyXavier,AjlaKaric
+
 # Tell Deno to not output color as this looks weird in the log files.
 NO_COLOR= \
 
-# time    deno                 run permissions                                                                                                 app                   fromDate                         toDate                           users   .env           logfile
-0 8 * * * /root/.deno/bin/deno run --allow-env --allow-net=api.personio.de,api.harvestapp.com --allow-read=/workdir/.env,/workdir/.env.example /workdir/src/index.ts `date -d yesterday +\%Y-\%m-\%d` `date -d yesterday +\%Y-\%m-\%d` all '' /workdir/.env >> /var/cron_log/cronjob.log 2>&1
+# Working students
+# time    log perm.  deno                 run permissions                                                                                                 app                   fromDate                         toDate                           users         .env             logfile
+0 8 * * * /root/.deno/bin/deno run --allow-env --allow-net=api.personio.de,api.harvestapp.com --allow-read=/workdir/.env,/workdir/.env.example /workdir/src/index.ts `date -d yesterday +\%Y-\%m-\%d` `date -d yesterday +\%Y-\%m-\%d` "$STUDENTS" '' /workdir/.env >> /var/cron_log/`date +\%Y-\%m-\%d`__working_students.log 2>&1
+
+# All other employees
+# time    log perm.  deno                 run permissions                                                                                                 app                   fromDate                                      toDate                              users           .env             logfile
+0 9 * * 3 /root/.deno/bin/deno run --allow-env --allow-net=api.personio.de,api.harvestapp.com --allow-read=/workdir/.env,/workdir/.env.example /workdir/src/index.ts `date -d 'last Monday - 7 days' +\%Y-\%m-\%d` `date -d 'last Sunday' +\%Y-\%m-\%d` all "$STUDENTS" /workdir/.env >> /var/cron_log/`date +\%Y-\%m-\%d`__fulltime_employees.log 2>&1
+
+# Remove logs every month
+30 8 1 * * rm /var/cron_log/`date -d '- 4 months' +\%Y-\%m`*

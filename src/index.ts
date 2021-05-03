@@ -6,7 +6,7 @@ import { jobLog, AttendanceCreationLog, AttendanceCreationErrorReason, generateJ
 
 const JOB_ID = generateJobId()
 
-let [ fromDate = null, toDate = null, includePeople = '', excludePeople = '', dotEnvPath = './.env', dotEnvExamplePath = '' ] = Deno.args
+let [fromDate = null, toDate = null, includePeople = '', excludePeople = '', dotEnvPath = './.env', dotEnvExamplePath = ''] = Deno.args
 
 config({ export: true, safe: true, path: dotEnvPath, example: dotEnvExamplePath || `${dotEnvPath}.example`, defaults: '' })
 const personioAPI = new PersonioAPI({
@@ -81,7 +81,8 @@ for (const userTimeEntries of groupTimeEntriesByUser(filteredTimeEntries)) {
         console.log(log)
         continue
     }
-    for (const attendance of addDailyTimeEntries(userTimeEntries)) {
+    var attendances = addDailyTimeEntries(userTimeEntries)
+    for (const attendance of attendances) {
         attendance.employee = personioEmployeeId
         attendance.comment = `Created from Harvest (${jobLog(JOB_ID)})`
         partialLog.attendance = attendance
